@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <typeinfo>
+#include <stdexcept>
+
 template <typename Tip>
 class Pointer
 {
@@ -11,13 +14,44 @@ class Pointer
         inline static int counter = 0; 
         char serial_number[9]; // Labels the pointer
 
-        inline std::string char_to_string_serial() // converts char array to string
+        Pointer (const Pointer&) = delete; // prevents copying of the object, because it might lead to undefined behavior.
+
+        Pointer (Pointer&& pointer_class) noexcept : pointer(pointer_class.pointer), // moves the class and clears the old one.
+                                                     dynamic(pointer_class.dynamic)
+        {
+            for (int index = 0; index < 9; index++) this -> serial_number[index] = pointer_class.serial_number[index]; 
+            pointer_class.pointer = nullptr;
+            pointer_class.dynamic = false;
+        }
+
+        Pointer& operator=(Pointer&& pointer_class) noexcept // allows moving under condition.
+        {
+            if (this == &pointer_class) return *this;
+
+            dispose();
+            this -> pointer = pointer_class.pointer;
+            this -> dynamic = pointer_class.dynamic;
+
+            copy_char_serial(pointer_class.serial_number);
+
+            pointer_class.pointer = nullptr;
+            pointer_class.dynamic = false;
+
+            return *this;
+        }
+
+        inline std::string char_to_string_serial() const // converts char array to string
         {
             return std::string(serial_number, 8);
         }
 
+        inline void copy_char_serial(const char* char_array) noexcept
+        {
+            for (int index = 0; index < 9; index++) serial_number[index] = char_array[index];
+        }
+
     public:
-        Pointer(Tip& ref, bool is_dynamic = false) : pointer (&ref), dynamic(is_dynamic)
+        Pointer(Tip& ref, bool is_dynamic = false) : pointer (&ref), dynamic(is_dynamic) // constructor of the Pointer class.
         {
             if (counter > 99999999) throw std::invalid_argument("Too many pointers declared (" + std::string(typeid(Tip).name()) + ")");
 
@@ -30,36 +64,43 @@ class Pointer
             counter++;
         };
         
-        ~Pointer()
+        ~Pointer() noexcept 
         {
             if (dynamic && pointer != nullptr) delete pointer;
+            dynamic = false;
             pointer = nullptr;
         }
 
-        Tip& point() // Replaces the '*' key and check's if it's not nullptr.
+        Tip& point() const // Replaces the '*' key and check's if it's not nullptr.
         {
             if (pointer == nullptr) throw std::invalid_argument("Pointer " + char_to_string_serial() + " is null (" + std::string(typeid(Tip).name()) + ")");
             return *pointer;           
         }
 
-        Tip& operator*()
+        inline Tip& operator*() const
         {
             return point();
         }
 
-        const char* get_serial_number() const // return an const char array witch is the serial number of the pointer.
+        inline Tip* operator->() const
+        {
+            return point();
+        }
+
+        const char* get_serial_number() const noexcept // return an const char array witch is the serial number of the pointer.
         {
             return serial_number;
         }
 
-        bool is_null() const
+        bool is_null() const noexcept
         {
             return pointer == nullptr;
         }
 
-        void dispose() // clears the pointer
+        void dispose() noexcept // clears the pointer
         {
             if (dynamic && pointer != nullptr) delete pointer; // dynamic memory is released.
+            dynamic = false;
             pointer = nullptr;
         }
 
