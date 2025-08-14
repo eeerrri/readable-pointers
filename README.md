@@ -40,7 +40,7 @@ The library contains functions that help you control the pointer. All functions 
 | override_counter(int number = 0);| enables the user to change the counter of the serial number            |
 
 The override_counter function is static, so it should be called like this:
-`Pointer<int>::override_counter(120); <br> <br>
+`Pointer<int>::override_counter(120);` <br> <br>
 
 **Warning: The pointer counter can't surpass 99999999 pointers. You can reset it with the `override_counter` function.**
 
