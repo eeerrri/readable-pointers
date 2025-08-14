@@ -44,7 +44,7 @@ The override_counter function is static, so it should be called like this:
 
 **Warning: The pointer counter can't surpass 99999999 pointers. You can reset it with the `override_counter` function.**
 
-*Notice: Every data type has its own pointer counter.*
+*Notice: Every data type has its own pointer counter.*\
 *Notice: The object can't be copied, as the function has been deleted for safety.*
 
 
